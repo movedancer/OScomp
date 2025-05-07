@@ -1,0 +1,38 @@
+tatic struct Page *
+default_alloc_pages(size_t n) {
+#ifdef LAB2_EX1
+    assert(n > 0);
+    if (n > nr_free) {
+        return NULL;
+    }
+    struct Page *page = NULL;
+    list_entry_t *le = &free_list;
+    int THRESHOLD = 1;
+    // TODO: optimize (next-fit)
+    while ((le = list_next(le)) != &free_list) {
+        struct Page *p = le2page(le, page_link);
+        if (p->property >= n) {
+            page = p;
+            break;
+        }
+    }
+
+    if (page != NULL) {
+        if (page->property - n < THRESHOLD) {
+            nr_free -= page->property;
+            list_del(&(page->page_link));
+            ClearPageProperty(page);
+        } else {
+            struct Page *new_page = page + n;
+            nr_free -= n;
+            new_page->property = page->property - n;
+            SetPageProperty(new_page);
+            list_add_after(&(page->page_link), &(new_page->page_link));
+            list_del(&(page->page_link));
+            ClearPageProperty(page);
+        }
+        return page;
+    }
+#endif
+    return NULL;
+}

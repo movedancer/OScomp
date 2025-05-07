@@ -1,0 +1,29 @@
+pte_t *
+get_pte(pde_t *pgdir, uintptr_t la, bool create) {
+#ifdef LAB2_EX2
+    pde_t *pdep = NULL;
+    pdep = pgdir + PDX(la); 
+    if (((*pdep) & PTE_P) == 0)
+    {
+
+        if (!create)
+            return NULL;
+
+        struct Page *new_pte = alloc_page();
+        if (!new_pte)
+            return NULL;
+    page_ref_inc(new_pte);
+        uintptr_t pa = (uintptr_t)page2kva(new_pte);
+
+        memset((void *)pa, 0, PGSIZE);
+        kprintf("@@@ %x\n", pa);
+
+        *pdep = PADDR(pa);
+        (*pdep) |= (PTE_U | PTE_P | PTE_W);
+    }
+    pte_t *ret = (pte_t *)KADDR((uintptr_t)((pte_t *)(PDE_ADDR(*pdep)) + PTX(la)));
+    kprintf("@@GET_PTE %x %x %x\n", *pdep, ret, *ret);
+    return ret;
+
+#endif
+}
